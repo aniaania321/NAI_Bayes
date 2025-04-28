@@ -41,6 +41,7 @@ public class NaiveBayesClassifier {
         //A posteriori
         for (String attribute : attributeCounts.keySet()) {
             Map<String, Map<String, Integer>> valueMap = attributeCounts.get(attribute);
+            int numberOfAttributeValues = valueMap.size();
             Map<String, Double> yes_probabilities_values = new HashMap<>();//here the attribute value is the key, this is yhe inner we will put in the main map
             Map<String, Double> no_probabilites_values = new HashMap<>();
             for (String value : valueMap.keySet()) {
@@ -50,7 +51,7 @@ public class NaiveBayesClassifier {
                     double probability;
                     if (label.equals("yes")) {
                         if(applySmoothingAll||count==0) {
-                            probability=simpleSmoothing((double)count,yes_count,2);
+                            probability=simpleSmoothing((double)count,yes_count,numberOfAttributeValues);
                         }
                         else{
                             probability = (double) count / yes_count;
@@ -58,7 +59,7 @@ public class NaiveBayesClassifier {
                         yes_probabilities_values.put(value, probability);
                     } else {
                         if(applySmoothingAll||count==0) {
-                            probability=simpleSmoothing((double)count,no_count,2);
+                            probability=simpleSmoothing((double)count,no_count,numberOfAttributeValues);
                         }else{
                             probability = (double) count / no_count;
                         }
@@ -75,22 +76,25 @@ public class NaiveBayesClassifier {
         double probability_no =1;
 
         for(String attribute : attributes.keySet()) {
+            int numberOfAttributeValues = attributeCounts.get(attribute).size();
+
             Map<String, Double> probabilities_for_attribute=yes_probabilities_attribute.get(attribute);
             if(probabilities_for_attribute.containsKey(attribute)) {
                 double probability_yes_for_attribute=probabilities_for_attribute.get(attributes.get(attribute));
                 probability_yes*=probability_yes_for_attribute;
             }else{
-                probability_yes *= simpleSmoothing(0, no_count, 2);//"Gdyby nie było w ogóle w train secie np. rainy, a w test secie byłby, to wtedy w predict byłoby null i potrzebujemy smoothingu.
+                probability_yes *= simpleSmoothing(0, no_count, numberOfAttributeValues);//"Gdyby nie było w ogóle w train secie np. rainy, a w test secie byłby, to wtedy w predict byłoby null i potrzebujemy smoothingu.
                 //A jeśli było rainy tylko przy jednym labelu (no), to dla drugiego labelu (yes) prawdopodobieństwo normalnie wysmoothujemy."
             }
         }
         for(String attribute : attributes.keySet()) {
+            int numberOfAttributeValues = attributeCounts.get(attribute).size();
             Map<String, Double> probabilities_for_attribute=no_probabilites_attribute.get(attribute);
             if(probabilities_for_attribute.containsKey(attribute)) {
                 double probability_no_for_attribute=probabilities_for_attribute.get(attributes.get(attribute));
                 probability_no*=probability_no_for_attribute;
             } else{
-                probability_no *= simpleSmoothing(0, no_count, 2);
+                probability_no *= simpleSmoothing(0, no_count, numberOfAttributeValues);
 
             }
         }
